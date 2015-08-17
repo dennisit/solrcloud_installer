@@ -93,6 +93,8 @@ write_msg "Get list of IP"
 IP_LIST=$(ifconfig | perl -nle 's/dr:(\S+)/print $1/e')
 write_msg "IP addresses found: \n$IP_LIST"
 
+ZK_ENSAMBLE_SOLRCLOUD=" "
+
 count=1
 #Adding servers to config
 for i in "${SERVERS_IP[@]}"
@@ -108,10 +110,17 @@ do
 	    MYIP=$i
 	fi
 
+	#Create ZK Ensable string for SolrCloud
+	if [ "$ZK_ENSAMBLE_SOLRCLOUD" != " " ];then
+	        ZK_ENSAMBLE_SOLRCLOUD="$ZK_ENSAMBLE_SOLRCLOUD,"
+	fi
+	ZK_ENSAMBLE_SOLRCLOUD="$ZK_ENSAMBLE_SOLRCLOUD$i:$ZOOKEEPER_PORT"
+
+
 	count=$((count+1))
 done
 
-write_msg "Set zookeeper to start at boot"
+write_msg "Set zookeeper service"
 cp -fr zk.service /etc/init.d/zookeeper
 sed -i -e "s|replace_with_zookeeper_dir|$ZOOK_DIR|g" /etc/init.d/zookeeper
 chmod +x /etc/init.d/zookeeper
@@ -144,13 +153,13 @@ if [ ! -d $SOLR_HOME_PATH ]; then
 	write_msg "Removing temp Solr folder"
 	rm -rf /tmp/solr*
 
-	#Start Solr
-	#write_msg "Restarting Solr"
-	#$JAVA_BIN -Dbootstrap_confdir=$SOLR_HOME_PATH/infom_coll/conf -Dcollection.configName=solr1 -DzkHost=$MYIP:2888 -DnumShards=${#SERVERS_IP[@]} -jar $SOLR_HOME_PATH/server/start.jar
-	#$SOLR_HOME_PATH/bin/solr start -f -e cloud -z localhost:$ZOOKEEPER_PORT -noprompt
+	write_msg "Creating startup script for Solr at $SOLR_HOME_PATH/start_solrcloud.sh"
+	echo "#!/bin/bash" > $SOLR_HOME_PATH/start_solrcloud.sh
+	echo "$SOLR_HOME_PATH/bin/solr stop -all" >> $SOLR_HOME_PATH/start_solrcloud.sh
+	echo "$SOLR_HOME_PATH/bin/solr start -c -z $ZK_ENSAMBLE_SOLRCLOUD -noprompt" >> $SOLR_HOME_PATH/start_solrcloud.sh
+	chmod +x $SOLR_HOME_PATH/start_solrcloud.sh
 
 fi
 
-#write_msg "Starting  Solr"
-#$SOLR_HOME_PATH/bin/solr stop -all
-#$SOLR_HOME_PATH/bin/solr start -c -z $MYIP:$ZOOKEEPER_PORT -noprompt
+write_msg "Restarting Solr"
+$SOLR_HOME_PATH/start_solrcloud.sh
