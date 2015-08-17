@@ -1,0 +1,14 @@
+#/bin/sh
+
+export ZOO_LOG_DIR=replace_with_zookeeper_dir
+
+
+ZOOK_DIR=replace_with_zookeeper_dir
+
+case $1 in
+          start)  $ZOOK_DIR/bin/zkServer.sh start   ;;
+          stop)  $ZOOK_DIR/bin/zkServer.sh stop;;
+          status)  $ZOOK_DIR/bin/zkServer.sh status;;
+          restart)  $ZOOK_DIR/bin/zkServer.sh restart;;
+              *)  echo "require start|stop|status|restart"  ;;
+esac
