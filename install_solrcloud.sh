@@ -151,6 +151,6 @@ if [ ! -d $SOLR_HOME_PATH ]; then
 
 fi
 
-write_msg "Starting  Solr"
-$SOLR_HOME_PATH/bin/solr stop -all
-$SOLR_HOME_PATH/bin/solr start -c -z $MYIP:$ZOOKEEPER_PORT -noprompt
+#write_msg "Starting  Solr"
+#$SOLR_HOME_PATH/bin/solr stop -all
+#$SOLR_HOME_PATH/bin/solr start -c -z $MYIP:$ZOOKEEPER_PORT -noprompt
